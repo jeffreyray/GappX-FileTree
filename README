@@ -16,7 +16,8 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-    Gapp
+   Gapp
+   MooseX::Types::Moose
 
 COPYRIGHT AND LICENCE
 

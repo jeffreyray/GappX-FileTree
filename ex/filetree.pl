@@ -9,9 +9,10 @@ use GappX::FileTree;
 
 
 my $t = GappX::FileTree->new;
-$t->refresh;
+$t->update;
 
 my $w = Gapp::Window->new(
+    title => 'FileTree Example',
     content => [$t],
 );
 
