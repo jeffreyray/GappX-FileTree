@@ -1,6 +1,6 @@
 package GappX::FileTree;
 
-our $VERSION = 0.02;
+our $VERSION = 0.03;
 
 use Moose;
 extends 'Gapp::TreeView';
@@ -69,8 +69,12 @@ has 'path' => (
     isa => 'Str',
     default => '.',
     trigger => sub {
-        my ( $self ) = @_;
-        $self->update if $self->has_gobject;
+        my ( $self, $newval, $oldval ) = @_;
+        
+        if ( $newval ne $oldval ) {
+            $self->update if $self->has_gobject;
+        }
+        
     }
 );
 
@@ -87,6 +91,8 @@ sub update {
     my $m = $self->model->gobject;
     
     my $base = $self->path;
+    $base =~ s/\/|\\\s*$//;
+    my $baserx = quotemeta $base;
     
     my @path;
     
@@ -101,10 +107,8 @@ sub update {
             }
             
             my $dir = $File::Find::dir;
-            
-            $dir =~ s/^\.//;
-            
-            my @dirs = split /\//, $dir;
+            $dir =~ s/^$baserx//;
+            my @dirs = split /\/|\\/, $dir;
             shift @dirs if @dirs && ! $dirs[0];
             
             # if this is a directory
@@ -120,6 +124,7 @@ sub update {
                         
                     }
                     else {
+                        no warnings;
                         while ( $path[-1] ne $dirs[-1] ) {
                             $iter = $m->iter_parent( $iter ) if $iter ;
                             pop @path;
@@ -128,6 +133,7 @@ sub update {
                         
                     }
                 }
+                
                 
                 if ( @path && ( ! @dirs || $path[-1] ne $dirs[-1] ) ) {
                     $iter = $m->iter_parent( $iter ) if $iter ;
