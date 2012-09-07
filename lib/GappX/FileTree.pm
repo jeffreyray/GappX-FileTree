@@ -1,6 +1,6 @@
 package GappX::FileTree;
 
-our $VERSION = 0.01;
+our $VERSION = 0.02;
 
 use Moose;
 extends 'Gapp::TreeView';
@@ -35,6 +35,11 @@ has '+columns' => (
     lazy => 1,
 );
 
+has 'filter_func' => (
+    is => 'rw',
+    isa => 'Maybe[CodeRef]',
+);
+
 has '+model' => (
     default => sub {
         Gapp::TreeStore->new(
@@ -59,12 +64,20 @@ has '+model' => (
     lazy => 1,
 );
 
-
 has 'path' => (
     is => 'rw',
     isa => 'Str',
     default => '.',
+    trigger => sub {
+        my ( $self ) = @_;
+        $self->update if $self->has_gobject;
+    }
 );
+
+after _build_gobject => sub {
+    $_[0]->update;
+};
+
 
 sub update {
     my ( $self ) = @_;
@@ -81,8 +94,11 @@ sub update {
     
     find (
         sub {
-            return if $File::Find::name =~ /\.git/;
             return if $_ eq '.';
+            
+            if ( $self->filter_func ) {
+                return if $self->filter_func->( $self, $_, $File::Find::name, $File::Find::dir );
+            }
             
             my $dir = $File::Find::dir;
             
@@ -94,20 +110,39 @@ sub update {
             # if this is a directory
             if ( -d $_ ) {
                 
+                if ( @path ) {
+
+                    if ( ! @dirs ) {
+                        while ( @path ) {
+                            $iter = $m->iter_parent( $iter ) if $iter;
+                            pop @path;
+                        }
+                        
+                    }
+                    else {
+                        while ( $path[-1] ne $dirs[-1] ) {
+                            $iter = $m->iter_parent( $iter ) if $iter ;
+                            pop @path;
+                        }
+                        
+                        
+                    }
+                }
+                
                 if ( @path && ( ! @dirs || $path[-1] ne $dirs[-1] ) ) {
                     $iter = $m->iter_parent( $iter ) if $iter ;
                     pop @path;
                 }
                 
                 my $i = $m->append( $iter );
-                $m->set( $i, 0 => $_ , 1 => $_, 2 => 'gtk-directory', 3 => 1 );
+                $m->set( $i, 0 => $File::Find::name , 1 => $_, 2 => 'gtk-directory', 3 => 1 );
                 $iter = $i;
                 push @path, $_;
             }
             # if this is a file
             else {
                 my $i = $m->append( $iter );
-                $m->set( $i, 0 => $_ , 1 => $_, 2 => 'gtk-new', 3 => 0 );
+                $m->set( $i, 0 => $File::Find::name , 1 => $_, 2 => 'gtk-new', 3 => 0 );
             }
         },
         $self->path
@@ -168,7 +203,21 @@ icon.
 
 =head1 PROVIDED ATTRIBUTES
 
-=ober 4
+=over 4
+
+=item B<filter_func>
+
+=over 4
+
+=item is rw
+
+=item isa CodeRef|Undef
+
+=item default .
+
+=back
+
+Use this function to filter the files displayed in the view.
 
 =item B<path>
 

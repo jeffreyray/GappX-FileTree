@@ -1,4 +1,9 @@
 Changes for GappX::FileTree
 
+0.02 Sep 6 2012
+- BUG FIX: Fixed bug displaying sub-directories
+- added filter_func property to filter results
+- "update" now called upon gobject construction
+
 0.01
 - Initial Release
