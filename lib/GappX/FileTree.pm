@@ -99,12 +99,9 @@ sub update {
     
     my $iter = undef;
     
-    print $self->path ," - ", $baserx, "\n";
-    
     find (
         sub {
             return if $_ eq '.';
-            print "$File::Find::name\n";
             
             if ( $self->filter_func ) {
                 return if $self->filter_func->( $self, $_, $File::Find::name, $File::Find::dir );
@@ -158,6 +155,23 @@ sub update {
         $self->path
     );
 
+}
+
+sub _get_selected_data {
+    my ( $self ) = @_;
+    my $iter =  $self->view->gobject->get_selection->get_selected;
+    return if ! $iter;
+    my $model = $self->view->gobject->get_model;
+    return [$model->get( $iter, 0, 1, 2, 3 )];
+}
+
+
+sub selected_is_dir {
+    my ( $self ) = @_;
+    my $iter =  $self->gobject->get_selection->get_selected;
+    return if ! $iter;
+    my $model = $self->gobject->get_model;
+    return $model->get( $iter, 3 ) ? 1 : 0;
 }
 
 package Gapp::Layout::Default;
