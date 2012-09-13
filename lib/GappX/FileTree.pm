@@ -86,21 +86,25 @@ after _build_gobject => sub {
 sub update {
     my ( $self ) = @_;
     
+    
     $self->model->gobject->clear;
     
     my $m = $self->model->gobject;
     
     my $base = $self->path;
-    $base =~ s/\/|\\\s*$//;
+    $base =~ s/(\/|\\)\s*$//; # remov trailing slash
     my $baserx = quotemeta $base;
     
     my @path;
     
     my $iter = undef;
     
+    print $self->path ," - ", $baserx, "\n";
+    
     find (
         sub {
             return if $_ eq '.';
+            print "$File::Find::name\n";
             
             if ( $self->filter_func ) {
                 return if $self->filter_func->( $self, $_, $File::Find::name, $File::Find::dir );
