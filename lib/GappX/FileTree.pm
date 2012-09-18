@@ -79,7 +79,7 @@ has 'path' => (
 );
 
 after _build_gobject => sub {
-    $_[0]->update;
+    #$_[0]->update;
 };
 
 
