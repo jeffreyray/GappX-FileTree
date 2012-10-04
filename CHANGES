@@ -1,5 +1,7 @@
 Changes for GappX::FileTree
 
+{{$NEXT}}
+
 0.03 Sept 7 2012
 - added support for windows style directory separators
 - addes support for absolute paths
